@@ -148,6 +148,37 @@ namespace F23L034_DemoConsumeApi
             //        Console.WriteLine(httpResponseMessage.StatusCode);
             //    }
             //}
+
+
+            //Récupération du Token
+
+            string token = "";
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:7197/");
+                HttpContent httpContent = JsonContent.Create(new { Email = "thierry.morre@cognitic.be", Passwd = "Test1234=" });
+                using (HttpResponseMessage httpResponseMessage = client.PostAsync($"/api/Auth/login", httpContent).Result)
+                {
+                    httpResponseMessage.EnsureSuccessStatusCode(); // => Exception
+                    string content = httpResponseMessage.Content.ReadAsStringAsync().Result;
+                    Utilisateur utilisateur = JsonSerializer.Deserialize<Utilisateur>(content, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true })!;
+                    token = utilisateur.Token;
+                }
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
+
+                client.BaseAddress = new Uri("https://localhost:7197/");
+                using (HttpResponseMessage httpResponseMessage = client.GetAsync($"/WeatherForecast").Result)
+                {
+                    httpResponseMessage.EnsureSuccessStatusCode(); // => Exception
+                    string content = httpResponseMessage.Content.ReadAsStringAsync().Result;
+                    Console.WriteLine(content);                   
+                }
+            }
         }
     }
 }
